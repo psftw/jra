@@ -79,10 +79,10 @@ fn run() -> Result<(), Box<Error>> {
         Opt::List {} => {
             let mut table = Table::new();
             table.set_format(*format::consts::FORMAT_CLEAN);
-            table.add_row(row!["JIRA_NAME", "QUERY_NAME", "QUERY"]);
-            for (jira_name, config) in config.configs {
-                for (q_name, q) in config.queries {
-                    table.add_row(row![jira_name, q_name, q]);
+            table.add_row(row!["JIRA", "QUERY_NAME", "QUERY"]);
+            for config in config.configs.values() {
+                for (q_name, q) in config.queries.clone() {
+                    table.add_row(row![config.host, q_name, q]);
                 }
             }
             table.printstd();
@@ -95,8 +95,8 @@ fn run() -> Result<(), Box<Error>> {
                 Ok(results) => {
                     let mut table = Table::new();
                     table.set_format(*format::consts::FORMAT_CLEAN);
-                    // put LINK at the end otherwise prettytable gets confused about the cell
-                    // length due to the escape codes
+                    // 1. LINK string length confuses prettytable so put it at end for now
+                    // 2. issue.priority() broken?
                     table.add_row(row!["SUMMARY", "STATUS", "REPORTER", "ASSIGNEE", "LINK"]);
                     for issue in results {
                         table.add_row(row![
