@@ -95,14 +95,16 @@ fn run() -> Result<(), Box<Error>> {
                 Ok(results) => {
                     let mut table = Table::new();
                     table.set_format(*format::consts::FORMAT_CLEAN);
-                    table.add_row(row!["TICKET", "SUMMARY", "STATUS", "REPORTER", "ASSIGNEE"]);
+                    // put LINK at the end otherwise prettytable gets confused about the cell
+                    // length due to the escape codes
+                    table.add_row(row!["SUMMARY", "STATUS", "REPORTER", "ASSIGNEE", "LINK"]);
                     for issue in results {
                         table.add_row(row![
-                            linkify(issue.key.clone(), format!("{}/browse/{}", &jc.host, &issue.key)),
                             issue.summary().unwrap_or("???".to_owned()),
-                            issue.status().map(|value| value.name).unwrap_or("???".to_owned()),
-                            issue.reporter().map(|value| value.display_name).unwrap_or("???".to_owned()),
-                            issue.assignee().map(|value| value.display_name,).unwrap_or("???".to_owned())
+                            issue.status().map(|value| value.name).unwrap_or("".to_owned()),
+                            issue.reporter().map(|value| value.display_name).unwrap_or("".to_owned()),
+                            issue.assignee().map(|value| value.display_name,).unwrap_or("".to_owned()),
+                            linkify(issue.key.clone(), format!("{}/browse/{}", &jc.host, &issue.key)),
                         ]);
                     }
                     table.printstd();
