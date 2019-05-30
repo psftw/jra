@@ -1,5 +1,3 @@
-#![recursion_limit = "1024"]
-
 #[macro_use]
 extern crate prettytable;
 #[macro_use]
@@ -93,15 +91,10 @@ fn run() -> Result<(), Box<Error>> {
             let jc = config.lookup_jira(&query)?;
             let jira = Jira::new(jc.host.clone(), Credentials::Basic(jc.user.clone(), jc.pass.clone())).unwrap();
             let query_text = jc.queries.get(&query).unwrap().to_string();
-            //let search_opts = SearchOptions::builder()
-            //    .fields(vec!["*all"])
-            //    .build();
             match jira.search().iter(query_text, &Default::default()) {
                 Ok(results) => {
                     let mut table = Table::new();
                     table.set_format(*format::consts::FORMAT_CLEAN);
-                    // 1. LINK string length confuses prettytable so put it at end for now
-                    // 2. issue.priority() broken?
                     table.add_row(row!["LINK", "SUMMARY", "STATUS", "REPORTER", "ASSIGNEE", "PRIORITY"]);
                     for issue in results {
                         table.add_row(row![
