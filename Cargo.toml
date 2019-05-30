@@ -1,13 +1,15 @@
 [package]
-name = "jeera"
-version = "0.1.0"
+name = "jra"
+version = "0.2.0"
 authors = ["Peter Salvatore <peter@psftw.com>"]
 edition = "2018"
 
 [dependencies]
 dirs = "1.0"
-goji = "^0.2"
-prettytable-rs = "^0.8"
+# WIP bugfixes
+goji = { git = "https://github.com/psftw/goji", branch = "fixes" }
+# support hyperlinks https://github.com/phsym/prettytable-rs/pull/106
+prettytable-rs = { git = "https://github.com/psftw/prettytable-rs", branch = "hyperlinks" }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"

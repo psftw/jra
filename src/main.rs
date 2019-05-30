@@ -1,3 +1,5 @@
+#![recursion_limit = "1024"]
+
 #[macro_use]
 extern crate prettytable;
 #[macro_use]
@@ -23,7 +25,7 @@ struct Config {
 }
 
 impl Config {
-    fn lookup_jira(&self, query: &String) -> Result<JiraConfig, Box<dyn Error>> {
+    fn lookup_jira(&self, query: &str) -> Result<JiraConfig, Box<dyn Error>> {
         let mut result = Err(format!("unknown query name: {}", query).into());
         for config in self.configs.clone().values() {
             for q in config.queries.keys() {
@@ -53,7 +55,7 @@ fn linkify(text: String, url: String) -> String {
 
 /// query jira api from cli
 #[derive(StructOpt, Debug)]
-#[structopt(name = "jeera", author = "")]
+#[structopt(name = "jra", author = "")]
 enum Opt {
     /// list queries
     #[structopt(name = "ls", author = "")]
@@ -70,7 +72,7 @@ enum Opt {
 fn run() -> Result<(), Box<Error>> {
 
     let mut config_path = dirs::config_dir().ok_or("unable to find a config dir")?;
-    config_path.push("jeera.json");
+    config_path.push("jra.json");
     let config_file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(config_file)?;
     let opt = Opt::from_args();
@@ -91,20 +93,24 @@ fn run() -> Result<(), Box<Error>> {
             let jc = config.lookup_jira(&query)?;
             let jira = Jira::new(jc.host.clone(), Credentials::Basic(jc.user.clone(), jc.pass.clone())).unwrap();
             let query_text = jc.queries.get(&query).unwrap().to_string();
+            //let search_opts = SearchOptions::builder()
+            //    .fields(vec!["*all"])
+            //    .build();
             match jira.search().iter(query_text, &Default::default()) {
                 Ok(results) => {
                     let mut table = Table::new();
                     table.set_format(*format::consts::FORMAT_CLEAN);
                     // 1. LINK string length confuses prettytable so put it at end for now
                     // 2. issue.priority() broken?
-                    table.add_row(row!["SUMMARY", "STATUS", "REPORTER", "ASSIGNEE", "LINK"]);
+                    table.add_row(row!["LINK", "SUMMARY", "STATUS", "REPORTER", "ASSIGNEE", "PRIORITY"]);
                     for issue in results {
                         table.add_row(row![
-                            issue.summary().unwrap_or("???".to_owned()),
-                            issue.status().map(|value| value.name).unwrap_or("".to_owned()),
-                            issue.reporter().map(|value| value.display_name).unwrap_or("".to_owned()),
-                            issue.assignee().map(|value| value.display_name,).unwrap_or("".to_owned()),
                             linkify(issue.key.clone(), format!("{}/browse/{}", &jc.host, &issue.key)),
+                            issue.summary().unwrap_or_else(|| "???".to_owned()),
+                            issue.status().map(|value| value.name).unwrap_or_else(|| "".to_owned()),
+                            issue.reporter().map(|value| value.display_name).unwrap_or_else(|| "".to_owned()),
+                            issue.assignee().map(|value| value.display_name,).unwrap_or_else(|| "".to_owned()),
+                            issue.priority().map(|value| value.name).unwrap_or_else(|| "".to_owned()),
                         ]);
                     }
                     table.printstd();
