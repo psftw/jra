@@ -1,6 +1,6 @@
 ## `jra`
 
-A CLI to run JIRA queries with clickable links from the command line.
+A CLI to run JIRA queries with clickable links.
 
 ```
 $ jra ls
